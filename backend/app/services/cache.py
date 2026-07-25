@@ -24,11 +24,20 @@ class CacheService:
     async def connect(self):
         """Connect to Redis if enabled."""
         if self.use_redis:
-            self.redis_client = redis.from_url(
-                settings.redis_url, decode_responses=True
-            )
-            # Test connection
-            await self.redis_client.ping()
+            try:
+                self.redis_client = redis.from_url(
+                    settings.redis_url, decode_responses=True
+                )
+                # Test connection
+                await self.redis_client.ping()
+            except Exception as e:  # noqa: BLE001
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    f"Gagal terhubung ke Redis ({e}). Menggunakan in-memory fallback cache."
+                )
+                self.use_redis = False
+                self.redis_client = None
 
     async def disconnect(self):
         """Disconnect from Redis if enabled."""
