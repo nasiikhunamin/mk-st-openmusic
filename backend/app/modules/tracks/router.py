@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.dependencies import get_db
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
+from app.modules.history.dependencies import get_history_service
+from app.modules.history.service import HistoryService
 from app.modules.tracks.dependencies import get_track_service
 from app.modules.tracks.schemas import PaginatedResponse, Track
 from app.modules.tracks.service import TrackService
@@ -42,5 +46,16 @@ async def get_track_stream(
     track_id: str,
     current_user: User = Depends(get_current_user),
     track_service: TrackService = Depends(get_track_service),
+    history_service: HistoryService = Depends(get_history_service),
+    db: AsyncSession = Depends(get_db),
 ):
-    return await track_service.get_stream_url(track_id)
+    track = await track_service.get_detail(track_id)
+    
+    await history_service.record(
+        db=db,
+        user_id=current_user.id,
+        track_id=track.id,
+        track_metadata=track.model_dump(),
+    )
+    
+    return {"audio_url": track.audio_url}
