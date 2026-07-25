@@ -6,14 +6,19 @@ Source: https://fastapi.tiangolo.com/advanced/events/
 import logging
 from contextlib import asynccontextmanager
 
+import redis
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.core.exceptions import AppError, ErrorCode
+from app.db import session as db_session
+from app.services.cache import cache_service
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +31,17 @@ async def lifespan(app: FastAPI):
     Source: https://fastapi.tiangolo.com/advanced/events/
     """
     logger.info("Application startup: Initializing resources.")
-    # Initialize DB and Redis here in future tasks
+    db_session.init_db()
+    # If redis URL is configured, we could set use_redis=True here or in config
+    if settings.redis_url:
+        cache_service.use_redis = True
+    await cache_service.connect()
+
     yield
+
     logger.info("Application shutdown: Cleaning up resources.")
-    # Cleanup DB and Redis here in future tasks
+    await cache_service.disconnect()
+    await db_session.close_db()
 
 
 settings = get_settings()
@@ -109,4 +121,27 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "ok"}
+    db_status = "disconnected"
+    redis_status = "disconnected"
+
+    # Check DB
+    if db_session.engine is not None:
+        try:
+            async with db_session.engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
+            db_status = "connected"
+        except SQLAlchemyError as e:
+            logger.error(f"Database health check failed: {e}")
+
+    # Check Redis
+    if cache_service.use_redis and cache_service.redis_client is not None:
+        try:
+            await cache_service.redis_client.ping()
+            redis_status = "connected"
+        except redis.exceptions.RedisError as e:
+            logger.error(f"Redis health check failed: {e}")
+    elif not cache_service.use_redis:
+        # In-memory fallback
+        redis_status = "connected (in-memory)"
+
+    return {"status": "ok", "db": db_status, "redis": redis_status}
