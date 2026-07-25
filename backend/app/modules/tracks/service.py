@@ -1,22 +1,34 @@
 import math
 
 from app.core.exceptions import AppError, ErrorCode
+from app.modules.mood.schemas import CocktailPairing, TrackMood
+from app.modules.mood.service import MoodService
 from app.modules.tracks.schemas import (
     PaginatedResponse,
     PaginationMeta,
     Track,
     TrackLyrics,
 )
+from app.services.cocktaildb import CocktailDBClient
 from app.services.jamendo import JamendoClient
 from app.services.lastfm import LastfmClient
 from app.services.lrclib import LrclibClient
 
 
 class TrackService:
-    def __init__(self, jamendo_client: JamendoClient, lastfm_client: LastfmClient = None, lrclib_client: LrclibClient = None):
+    def __init__(
+        self,
+        jamendo_client: JamendoClient,
+        lastfm_client: LastfmClient = None,
+        lrclib_client: LrclibClient = None,
+        mood_service: MoodService = None,
+        cocktaildb_client: CocktailDBClient = None,
+    ):
         self.jamendo = jamendo_client
         self.lastfm = lastfm_client
         self.lrclib = lrclib_client
+        self.mood_service = mood_service
+        self.cocktaildb = cocktaildb_client
 
     async def search(
         self, query: str, page: int = 1, page_size: int = 20
@@ -72,3 +84,36 @@ class TrackService:
                 return lyrics
         
         return TrackLyrics(plain_lyrics=None, synced_lyrics=None)
+
+    async def get_mood(self, track_id: str) -> TrackMood:
+        musicinfo = await self.jamendo.get_track_musicinfo(track_id)
+        tags = {
+            "speed": musicinfo.get("speed", ""),
+            "acousticelectric": musicinfo.get("acousticelectric", ""),
+            "vocalinstrumental": musicinfo.get("vocalinstrumental", ""),
+        }
+        
+        mood = "Neutral"
+        if self.mood_service:
+            mood = self.mood_service.classify(tags)
+            
+        return TrackMood(track_id=track_id, mood=mood, tags=tags)
+
+    async def get_cocktail(self, track_id: str) -> CocktailPairing:
+        mood_info = await self.get_mood(track_id)
+        if not self.cocktaildb:
+            raise AppError(
+                ErrorCode.EXTERNAL_API_ERROR,
+                "Service CocktailDB tidak tersedia",
+                502,
+            )
+            
+        pairing = await self.cocktaildb.get_cocktail_by_mood(mood_info.mood)
+        if not pairing:
+            raise AppError(
+                ErrorCode.EXTERNAL_API_ERROR,
+                "Gagal menghubungi TheCocktailDB",
+                502,
+            )
+            
+        return pairing

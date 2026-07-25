@@ -6,6 +6,7 @@ from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.models import User
 from app.modules.history.dependencies import get_history_service
 from app.modules.history.service import HistoryService
+from app.modules.mood.schemas import CocktailPairing, TrackMood
 from app.modules.tracks.dependencies import get_track_service
 from app.modules.tracks.schemas import PaginatedResponse, Track, TrackLyrics
 from app.modules.tracks.service import TrackService
@@ -82,3 +83,27 @@ async def get_track_lyrics(
     track_service: TrackService = Depends(get_track_service),
 ):
     return await track_service.get_lyrics(track_id)
+
+
+@tracks_router.get(
+    "/{track_id}/mood",
+    response_model=TrackMood,
+)
+async def get_track_mood(
+    track_id: str,
+    current_user: User = Depends(get_current_user),
+    track_service: TrackService = Depends(get_track_service),
+):
+    return await track_service.get_mood(track_id)
+
+
+@tracks_router.get(
+    "/{track_id}/cocktail",
+    response_model=CocktailPairing,
+)
+async def get_track_cocktail(
+    track_id: str,
+    current_user: User = Depends(get_current_user),
+    track_service: TrackService = Depends(get_track_service),
+):
+    return await track_service.get_cocktail(track_id)

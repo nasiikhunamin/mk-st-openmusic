@@ -108,3 +108,35 @@ class JamendoClient:
     async def get_stream_url(self, track_id: str) -> str:
         track = await self.get_track(track_id)
         return track.audio_url
+
+    async def get_track_musicinfo(self, track_id: str) -> dict:
+        cache_key = f"track:musicinfo:{track_id}"
+        cached = await self.cache.get(cache_key)
+        if cached:
+            return cached
+
+        try:
+            resp = await self.http.get(
+                f"{self.BASE_URL}/tracks",
+                params={
+                    "client_id": self.client_id,
+                    "id": track_id,
+                    "format": "json",
+                    "include": "musicinfo",
+                },
+            )
+            resp.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise AppError(
+                ErrorCode.EXTERNAL_API_ERROR, "Gagal terhubung ke Jamendo API", 502
+            ) from exc
+
+        data = resp.json()
+        results = data.get("results", [])
+        if not results:
+            raise AppError(ErrorCode.NOT_FOUND, "Track tidak ditemukan di Jamendo", 404)
+
+        musicinfo = results[0].get("musicinfo", {})
+        await self.cache.set(cache_key, musicinfo, ttl_seconds=3600)
+        return musicinfo
+
