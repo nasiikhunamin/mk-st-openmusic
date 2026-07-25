@@ -25,6 +25,9 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 from app.db.base import Base
 from app.modules.auth import models  # noqa: F401
+from app.modules.playlists import models as playlists_models  # noqa: F401
+from app.modules.favorites import models as favorites_models  # noqa: F401
+from app.modules.history import models as history_models  # noqa: F401
 
 target_metadata = Base.metadata
 
