@@ -10,8 +10,8 @@ class Track(BaseModel):
     artist: str
     album: str | None = None
     cover_url: str | None = None
-    audio_url: str
-    duration: int
+    audio_url: str | None = None
+    duration: int | None = None
     source: str = "jamendo"
 
 class PaginationMeta(BaseModel):
