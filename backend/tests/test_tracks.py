@@ -4,8 +4,12 @@ import pytest
 from httpx import AsyncClient
 
 from app.main import app
-from app.modules.tracks.dependencies import get_jamendo_client
-from app.modules.tracks.schemas import Track
+from app.modules.tracks.dependencies import (
+    get_jamendo_client,
+    get_lastfm_client,
+    get_lrclib_client,
+)
+from app.modules.tracks.schemas import Track, TrackLyrics
 
 
 @pytest.fixture
@@ -14,6 +18,22 @@ def mock_jamendo():
     app.dependency_overrides[get_jamendo_client] = lambda: mock
     yield mock
     app.dependency_overrides.pop(get_jamendo_client, None)
+
+
+@pytest.fixture
+def mock_lastfm():
+    mock = AsyncMock()
+    app.dependency_overrides[get_lastfm_client] = lambda: mock
+    yield mock
+    app.dependency_overrides.pop(get_lastfm_client, None)
+
+
+@pytest.fixture
+def mock_lrclib():
+    mock = AsyncMock()
+    app.dependency_overrides[get_lrclib_client] = lambda: mock
+    yield mock
+    app.dependency_overrides.pop(get_lrclib_client, None)
 
 
 @pytest.mark.asyncio
@@ -103,3 +123,55 @@ async def test_get_track_stream_success(
     resp = await client.get("/api/tracks/1/stream", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["audio_url"] == "https://audio.com/stream"
+
+
+@pytest.mark.asyncio
+async def test_get_similar_tracks(
+    client: AsyncClient, auth_headers, mock_jamendo, mock_lastfm
+):
+    mock_jamendo.get_track.return_value = Track(
+        id="1", title="Song", artist="Artist", audio_url="url", duration=100
+    )
+    mock_lastfm.get_similar_tracks.return_value = [
+        Track(id="lastfm-1", title="Similar", artist="Artist", source="lastfm")
+    ]
+
+    resp = await client.get("/api/tracks/1/similar", headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["meta"]["total"] == 1
+    assert data["data"][0]["title"] == "Similar"
+
+
+@pytest.mark.asyncio
+async def test_get_track_lyrics(
+    client: AsyncClient, auth_headers, mock_jamendo, mock_lrclib
+):
+    mock_jamendo.get_track.return_value = Track(
+        id="1", title="Song", artist="Artist", audio_url="url", duration=100
+    )
+    mock_lrclib.get_lyrics.return_value = TrackLyrics(
+        plain_lyrics="Plain", synced_lyrics="[00:12.00] Synced"
+    )
+
+    resp = await client.get("/api/tracks/1/lyrics", headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["plain_lyrics"] == "Plain"
+    assert data["synced_lyrics"] == "[00:12.00] Synced"
+
+
+@pytest.mark.asyncio
+async def test_get_track_lyrics_not_found(
+    client: AsyncClient, auth_headers, mock_jamendo, mock_lrclib
+):
+    mock_jamendo.get_track.return_value = Track(
+        id="1", title="Song", artist="Artist", audio_url="url", duration=100
+    )
+    mock_lrclib.get_lyrics.return_value = None
+
+    resp = await client.get("/api/tracks/1/lyrics", headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["plain_lyrics"] is None
+    assert data["synced_lyrics"] is None

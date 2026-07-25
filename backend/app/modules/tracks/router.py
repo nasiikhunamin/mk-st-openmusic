@@ -7,7 +7,7 @@ from app.modules.auth.models import User
 from app.modules.history.dependencies import get_history_service
 from app.modules.history.service import HistoryService
 from app.modules.tracks.dependencies import get_track_service
-from app.modules.tracks.schemas import PaginatedResponse, Track
+from app.modules.tracks.schemas import PaginatedResponse, Track, TrackLyrics
 from app.modules.tracks.service import TrackService
 
 tracks_router = APIRouter()
@@ -59,3 +59,26 @@ async def get_track_stream(
     )
     
     return {"audio_url": track.audio_url}
+
+@tracks_router.get(
+    "/{track_id}/similar",
+    response_model=PaginatedResponse[Track],
+)
+async def get_similar_tracks(
+    track_id: str,
+    limit: int = Query(10, ge=1, le=50),
+    current_user: User = Depends(get_current_user),
+    track_service: TrackService = Depends(get_track_service),
+):
+    return await track_service.get_similar(track_id, limit)
+
+@tracks_router.get(
+    "/{track_id}/lyrics",
+    response_model=TrackLyrics,
+)
+async def get_track_lyrics(
+    track_id: str,
+    current_user: User = Depends(get_current_user),
+    track_service: TrackService = Depends(get_track_service),
+):
+    return await track_service.get_lyrics(track_id)
