@@ -3,7 +3,7 @@ import hashlib
 import httpx
 
 from app.core.exceptions import AppError, ErrorCode
-from app.modules.track.schemas import Track
+from app.modules.tracks.schemas import Track
 from app.services.cache import CacheService
 
 
@@ -75,6 +75,11 @@ class JamendoClient:
         return tracks, total_count
 
     async def get_track(self, track_id: str) -> Track:
+        cache_key = f"track:{track_id}"
+        cached = await self.cache.get(cache_key)
+        if cached:
+            return Track.model_validate(cached)
+
         try:
             resp = await self.http.get(
                 f"{self.BASE_URL}/tracks",
@@ -96,7 +101,9 @@ class JamendoClient:
         if not results:
             raise AppError(ErrorCode.NOT_FOUND, "Track tidak ditemukan di Jamendo", 404)
 
-        return self._map_track(results[0])
+        track = self._map_track(results[0])
+        await self.cache.set(cache_key, track.model_dump(), ttl_seconds=3600)
+        return track
 
     async def get_stream_url(self, track_id: str) -> str:
         track = await self.get_track(track_id)
