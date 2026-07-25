@@ -91,6 +91,13 @@ async def test_get_track_detail_not_found(
 async def test_get_track_stream_success(
     client: AsyncClient, auth_headers, mock_jamendo
 ):
+    mock_jamendo.get_track.return_value = Track(
+        id="1",
+        title="Test Track",
+        artist="Test Artist",
+        audio_url="https://audio.com/stream",
+        duration=120,
+    )
     mock_jamendo.get_stream_url.return_value = "https://audio.com/stream"
 
     resp = await client.get("/api/tracks/1/stream", headers=auth_headers)

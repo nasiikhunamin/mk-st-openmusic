@@ -15,6 +15,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.exceptions import AppError, ErrorCode
 from app.db import session as db_session
@@ -62,6 +63,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include Main API Router
+app.include_router(api_router)
 
 
 @app.exception_handler(AppError)

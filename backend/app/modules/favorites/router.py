@@ -9,7 +9,6 @@ from app.modules.favorites.schemas import AddFavoriteInput
 from app.modules.favorites.service import FavoriteService
 from app.modules.tracks.schemas import PaginatedResponse, Track
 
-
 favorites_router = APIRouter()
 
 

@@ -6,6 +6,7 @@ class ErrorCode(str, Enum):
     """
     Error codes as defined in PRD-openmusic.md section 4.3 (Error Contract).
     """
+
     VALIDATION_ERROR = "VALIDATION_ERROR"
     AUTHENTICATION_ERROR = "AUTHENTICATION_ERROR"
     AUTHORIZATION_ERROR = "AUTHORIZATION_ERROR"
