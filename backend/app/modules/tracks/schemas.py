@@ -23,3 +23,8 @@ class PaginationMeta(BaseModel):
 class PaginatedResponse(BaseModel, Generic[T]):
     data: list[T]
     meta: PaginationMeta
+
+
+class TrackLyrics(BaseModel):
+    plain_lyrics: str | None = None
+    synced_lyrics: str | None = None
