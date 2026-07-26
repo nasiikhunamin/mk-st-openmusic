@@ -21,10 +21,7 @@ class FavoritesService extends ChangeNotifier {
       if (response.statusCode == 200) {
         final dataList = response.data['data'] as List;
         _favorites = dataList.map((item) {
-          // In the database model, the favorites return structure contains:
-          // id, user_id, track_id, track_metadata, added_at
-          final metadata = item['track_metadata'] as Map<String, dynamic>;
-          return Track.fromJson(metadata);
+          return Track.fromJson(item as Map<String, dynamic>);
         }).toList();
       }
     } catch (_) {} finally {

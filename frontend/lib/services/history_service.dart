@@ -21,8 +21,8 @@ class HistoryService extends ChangeNotifier {
       if (response.statusCode == 200) {
         final dataList = response.data['data'] as List;
         _history = dataList.map((item) {
-          final metadata = item['track_metadata'] as Map<String, dynamic>;
-          return Track.fromJson(metadata);
+          final trackJson = item['track'] as Map<String, dynamic>;
+          return Track.fromJson(trackJson);
         }).toList();
       }
     } catch (_) {} finally {
