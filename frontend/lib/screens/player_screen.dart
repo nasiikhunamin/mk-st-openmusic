@@ -5,7 +5,6 @@ import 'package:openmusic_frontend/services/player_service.dart';
 import 'package:openmusic_frontend/services/favorites_service.dart';
 import 'package:openmusic_frontend/widgets/lyrics_view.dart';
 import 'package:openmusic_frontend/widgets/recommendations_view.dart';
-import 'package:openmusic_frontend/widgets/mood_cocktail_view.dart';
 import 'package:openmusic_frontend/widgets/add_to_playlist_dialog.dart';
 import 'package:openmusic_frontend/theme/app_theme.dart';
 
@@ -28,7 +27,7 @@ class PlayerScreen extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -211,7 +210,6 @@ class PlayerScreen extends StatelessWidget {
                 tabs: [
                   Tab(text: 'Lirik'),
                   Tab(text: 'Rekomendasi'),
-                  Tab(text: 'Mood & Cocktail'),
                 ],
               ),
 
@@ -223,7 +221,6 @@ class PlayerScreen extends StatelessWidget {
                     children: [
                       LyricsView(trackId: track.id),
                       RecommendationsView(trackId: track.id),
-                      MoodCocktailView(trackId: track.id),
                     ],
                   ),
                 ),

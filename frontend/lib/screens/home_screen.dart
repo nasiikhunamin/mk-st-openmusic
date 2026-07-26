@@ -19,9 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Track> _synthwaveTracks = [];
   bool _isLoadingTrending = true;
   bool _isLoadingSynthwave = true;
-  String _currentMood = "Chill";
-  String _currentCocktail = "Mojito 🍹";
-  bool _isLoadingCocktail = false;
   bool _isSearchingArtist = false;
 
   @override
@@ -42,11 +39,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _trendingTracks = data.map((item) => Track.fromJson(item)).toList();
           _isLoadingTrending = false;
         });
-        
-        // Load default cocktail pairing based on first trending track if available
-        if (_trendingTracks.isNotEmpty) {
-          _fetchCocktailPairing(_trendingTracks.first.id);
-        }
       }
     } catch (_) {
       setState(() => _isLoadingTrending = false);
@@ -64,27 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (_) {
       setState(() => _isLoadingSynthwave = false);
-    }
-  }
-
-  Future<void> _fetchCocktailPairing(String trackId) async {
-    final apiClient = Provider.of<ApiClient>(context, listen: false);
-    setState(() => _isLoadingCocktail = true);
-    try {
-      final moodRes = await apiClient.dio.get('/api/tracks/$trackId/mood');
-      final cocktailRes = await apiClient.dio.get('/api/tracks/$trackId/cocktail');
-      if (moodRes.statusCode == 200 && cocktailRes.statusCode == 200) {
-        setState(() {
-          _currentMood = moodRes.data['mood'] ?? 'Chill';
-          _currentCocktail = "${cocktailRes.data['name'] ?? 'Mojito'} 🍹";
-        });
-      }
-    } catch (_) {
-      // Keep defaults
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingCocktail = false);
-      }
     }
   }
 
@@ -108,7 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
         final tracks = data.map((item) => Track.fromJson(item)).toList();
         if (tracks.isNotEmpty) {
           await playerService.playTrack(tracks.first, newQueue: tracks);
-          _fetchCocktailPairing(tracks.first.id);
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -249,197 +219,124 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBentoGrid(TextTheme textTheme, PlayerService playerService) {
-    return Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left large hero card: New Release
-            Expanded(
-              flex: 2,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  if (_trendingTracks.isNotEmpty) {
-                    playerService.playTrack(_trendingTracks.first, newQueue: _trendingTracks);
-                  }
-                },
-                child: Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    image: const DecorationImage(
-                      image: NetworkImage('https://lh3.googleusercontent.com/aida-public/AB6AXuBAmG8X9cQSx8NBwuddOK988YVsBfh64Pb0sdhlbu8RV2IazD-GUcdlisbFTfh0PD7snwdHIIgMOP4xq6nuNvOBXw9L_SgOk98sf0qn4p0bMXm2cH3vUECyKOox2n296MXjthTxsuKCB_ZcixnbZHJ1RkM3bESCatkO5ZD4UTiQyQsvw9d-iN3cZqbfntzTcXy2wnmCpFhDPyrOF9fKwmn9zwDOz8X-qedMYf4JTmr1Q-MWKNHjOh4r'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        colors: [Colors.black.withOpacity(0.8), Colors.transparent],
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          'NEW RELEASE',
-                          style: textTheme.labelLarge?.copyWith(
-                            color: AppTheme.primary,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _trendingTracks.isNotEmpty ? _trendingTracks.first.title : 'Midnight Pulsar',
-                          style: textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          _trendingTracks.isNotEmpty ? _trendingTracks.first.artist : 'Luna Vibe',
-                          style: textTheme.bodyMedium?.copyWith(color: AppTheme.mutedText),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
+        // Left large hero card: New Release
+        Expanded(
+          flex: 2,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              if (_trendingTracks.isNotEmpty) {
+                playerService.playTrack(_trendingTracks.first, newQueue: _trendingTracks);
+              }
+            },
+            child: Container(
+              height: 180,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                image: const DecorationImage(
+                  image: NetworkImage('https://lh3.googleusercontent.com/aida-public/AB6AXuBAmG8X9cQSx8NBwuddOK988YVsBfh64Pb0sdhlbu8RV2IazD-GUcdlisbFTfh0PD7snwdHIIgMOP4xq6nuNvOBXw9L_SgOk98sf0qn4p0bMXm2cH3vUECyKOox2n296MXjthTxsuKCB_ZcixnbZHJ1RkM3bESCatkO5ZD4UTiQyQsvw9d-iN3cZqbfntzTcXy2wnmCpFhDPyrOF9fKwmn9zwDOz8X-qedMYf4JTmr1Q-MWKNHjOh4r'),
+                  fit: BoxFit.cover,
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            // Right Card: Daily Mix
-            Expanded(
-              flex: 1,
               child: Container(
-                height: 180,
-                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+                  gradient: LinearGradient(
+                    colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
                 ),
+                padding: const EdgeInsets.all(16),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const Icon(
-                      Icons.auto_awesome,
-                      color: AppTheme.primary,
-                      size: 32,
-                    ),
-                    const SizedBox(height: 12),
                     Text(
-                      'Daily Mix',
-                      style: textTheme.headlineMedium?.copyWith(fontSize: 16, color: Colors.white),
+                      'NEW RELEASE',
+                      style: textTheme.labelLarge?.copyWith(
+                        color: AppTheme.primary,
+                        letterSpacing: 1.5,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Untuk Anda',
-                      style: textTheme.labelLarge?.copyWith(color: AppTheme.mutedText),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_trendingTracks.isNotEmpty) {
-                          // Shuffle and play
-                          final shuffled = List<Track>.from(_trendingTracks)..shuffle();
-                          playerService.playTrack(shuffled.first, newQueue: shuffled);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                      _trendingTracks.isNotEmpty ? _trendingTracks.first.title : 'Midnight Pulsar',
+                      style: textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 18,
                       ),
-                      child: Text('Putar', style: textTheme.labelLarge?.copyWith(color: Colors.black, fontWeight: FontWeight.bold)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      _trendingTracks.isNotEmpty ? _trendingTracks.first.artist : 'Luna Vibe',
+                      style: textTheme.bodyMedium?.copyWith(color: AppTheme.mutedText),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
             ),
-          ],
+          ),
         ),
-        const SizedBox(height: 12),
-        // Bottom Banner: Cocktail Pairing
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            // Open PlayerScreen to show pairing detail if music is playing
-            if (playerService.currentTrack != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PlayerScreen()),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Putar musik untuk melihat analisis Cocktail Pairing aktif!'),
-                  backgroundColor: AppTheme.surface,
-                ),
-              );
-            }
-          },
+        const SizedBox(width: 12),
+        // Right Card: Daily Mix
+        Expanded(
+          flex: 1,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            height: 180,
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.primary.withOpacity(0.15)),
+              border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
             ),
-            child: Row(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppTheme.primaryGradient,
-                  ),
-                  child: const Icon(Icons.local_bar, color: Colors.black, size: 20),
+                const Icon(
+                  Icons.auto_awesome,
+                  color: AppTheme.primary,
+                  size: 32,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'COCKTAIL PAIRING',
-                        style: textTheme.labelLarge?.copyWith(
-                          color: AppTheme.primary,
-                          fontSize: 10,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      _isLoadingCocktail 
-                        ? const SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.tealAccent))
-                        : Text(
-                            'Mood: $_currentMood. Coba $_currentCocktail',
-                            style: textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
-                          ),
-                    ],
-                  ),
+                const SizedBox(height: 12),
+                Text(
+                  'Daily Mix',
+                  style: textTheme.headlineMedium?.copyWith(fontSize: 16, color: Colors.white),
                 ),
-                const Icon(Icons.chevron_right, color: AppTheme.mutedText),
+                const SizedBox(height: 4),
+                Text(
+                  'Untuk Anda',
+                  style: textTheme.labelLarge?.copyWith(color: AppTheme.mutedText),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_trendingTracks.isNotEmpty) {
+                      // Shuffle and play
+                      final shuffled = List<Track>.from(_trendingTracks)..shuffle();
+                      playerService.playTrack(shuffled.first, newQueue: shuffled);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: Text('Putar', style: textTheme.labelLarge?.copyWith(color: Colors.black, fontWeight: FontWeight.bold)),
+                ),
               ],
             ),
           ),
@@ -489,7 +386,6 @@ class _HomeScreenState extends State<HomeScreen> {
               behavior: HitTestBehavior.opaque,
               onTap: () {
                 playerService.playTrack(track, newQueue: _trendingTracks);
-                _fetchCocktailPairing(track.id);
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -560,7 +456,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListTile(
             onTap: () {
               playerService.playTrack(track, newQueue: _synthwaveTracks);
-              _fetchCocktailPairing(track.id);
             },
             leading: ClipRRect(
               borderRadius: BorderRadius.circular(8),
