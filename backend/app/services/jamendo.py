@@ -65,7 +65,15 @@ class JamendoClient:
             ) from exc
 
         data = resp.json()
-        total_count = data.get("headers", {}).get("total_count", 0)
+        headers = data.get("headers", {})
+        if headers.get("status") == "failed":
+            raise AppError(
+                ErrorCode.EXTERNAL_API_ERROR,
+                f"Jamendo API Error: {headers.get('error_message', 'Unknown error')}",
+                502,
+            )
+            
+        total_count = headers.get("total_count", 0)
         tracks = [self._map_track(item) for item in data.get("results", [])]
 
         # Cache the result
@@ -97,6 +105,14 @@ class JamendoClient:
             ) from exc
 
         data = resp.json()
+        headers = data.get("headers", {})
+        if headers.get("status") == "failed":
+            raise AppError(
+                ErrorCode.EXTERNAL_API_ERROR,
+                f"Jamendo API Error: {headers.get('error_message', 'Unknown error')}",
+                502,
+            )
+            
         results = data.get("results", [])
         if not results:
             raise AppError(ErrorCode.NOT_FOUND, "Track tidak ditemukan di Jamendo", 404)
@@ -132,6 +148,14 @@ class JamendoClient:
             ) from exc
 
         data = resp.json()
+        headers = data.get("headers", {})
+        if headers.get("status") == "failed":
+            raise AppError(
+                ErrorCode.EXTERNAL_API_ERROR,
+                f"Jamendo API Error: {headers.get('error_message', 'Unknown error')}",
+                502,
+            )
+            
         results = data.get("results", [])
         if not results:
             raise AppError(ErrorCode.NOT_FOUND, "Track tidak ditemukan di Jamendo", 404)

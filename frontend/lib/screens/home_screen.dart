@@ -376,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSectionHeader(TextTheme textTheme, String title, VoidCallback onTap) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.between,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
