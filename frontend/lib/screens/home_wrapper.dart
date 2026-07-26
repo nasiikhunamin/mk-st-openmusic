@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:openmusic_frontend/screens/home_screen.dart';
 import 'package:openmusic_frontend/screens/search_screen.dart';
 import 'package:openmusic_frontend/screens/library_screen.dart';
 import 'package:openmusic_frontend/screens/profile_screen.dart';
@@ -18,6 +19,7 @@ class _HomeWrapperState extends State<HomeWrapper> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
+    const HomeScreen(),
     const SearchScreen(),
     const LibraryScreen(),
     const ProfileScreen(),
@@ -55,6 +57,11 @@ class _HomeWrapperState extends State<HomeWrapper> {
           });
         },
         items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home, color: AppTheme.tealAccent),
+            label: 'Home',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.search_outlined),
             activeIcon: Icon(Icons.search, color: AppTheme.tealAccent),

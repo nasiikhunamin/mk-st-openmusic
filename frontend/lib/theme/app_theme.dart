@@ -76,13 +76,15 @@ class AppTheme {
           letterSpacing: 0.05,
         ),
       ),
-      cardTheme: const CardTheme(
+      cardTheme: const CardThemeData(
         color: surface,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16)),
-          side: BorderSide(color: Color(0x0DFFFFFF), width: 1), // 1px inner border 5% opacity
+          side: BorderSide(
+              color: Color(0x0DFFFFFF),
+              width: 1), // 1px inner border 5% opacity
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
