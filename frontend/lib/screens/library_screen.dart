@@ -538,7 +538,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.between,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   'Terakhir Diputar',

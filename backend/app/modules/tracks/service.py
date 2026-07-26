@@ -64,6 +64,17 @@ class TrackService:
             similar_tracks = await self.lastfm.get_similar_tracks(
                 artist=track.artist, track=track.title, limit=limit
             )
+            
+        # Fallback if LastFM returns nothing or if tracks are not from Jamendo
+        if not similar_tracks:
+            # Search Jamendo by artist name to get similar tracks
+            jamendo_tracks, _ = await self.jamendo.search(track.artist, page=1, page_size=limit + 1)
+            similar_tracks = [t for t in jamendo_tracks if t.id != track_id][:limit]
+            
+            # If still not enough tracks, fallback to popular search
+            if not similar_tracks:
+                jamendo_tracks, _ = await self.jamendo.search("hits", page=1, page_size=limit)
+                similar_tracks = jamendo_tracks[:limit]
         
         return PaginatedResponse(
             data=similar_tracks,
