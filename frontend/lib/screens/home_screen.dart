@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ShaderMask(
               shaderCallback: (bounds) => AppTheme.primaryGradient.createShader(bounds),
               child: Text(
-                'SONA',
+                'OpenMusic',
                 style: textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
