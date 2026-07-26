@@ -320,72 +320,76 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white.withOpacity(0.05)),
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  leading: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
-                      borderRadius: BorderRadius.circular(10),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    leading: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGradient,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.playlist_play, color: Colors.white, size: 28),
                     ),
-                    child: const Icon(Icons.playlist_play, color: Colors.white, size: 28),
-                  ),
-                  title: Text(
-                    playlist.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text(
-                    '${playlist.trackCount} Lagu',
-                    style: const TextStyle(color: AppTheme.mutedText, fontSize: 12),
-                  ),
-                  trailing: PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: AppTheme.mutedText),
-                    color: AppTheme.surface,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.white.withOpacity(0.05)),
+                    title: Text(
+                      playlist.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    onSelected: (value) {
-                      if (value == 'rename') {
-                        _showRenamePlaylistDialog(playlist.id, playlist.name);
-                      } else if (value == 'delete') {
-                        _showDeletePlaylistConfirm(playlist.id, playlist.name);
-                      }
+                    subtitle: Text(
+                      '${playlist.trackCount} Lagu',
+                      style: const TextStyle(color: AppTheme.mutedText, fontSize: 12),
+                    ),
+                    trailing: PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, color: AppTheme.mutedText),
+                      color: AppTheme.surface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.white.withOpacity(0.05)),
+                      ),
+                      onSelected: (value) {
+                        if (value == 'rename') {
+                          _showRenamePlaylistDialog(playlist.id, playlist.name);
+                        } else if (value == 'delete') {
+                          _showDeletePlaylistConfirm(playlist.id, playlist.name);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'rename',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit_outlined, size: 18, color: Colors.white70),
+                              SizedBox(width: 10),
+                              Text('Ubah Nama', style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline, size: 18, color: AppTheme.error),
+                              SizedBox(width: 10),
+                              Text('Hapus', style: TextStyle(color: AppTheme.error)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PlaylistDetailScreen(playlistId: playlist.id, playlistName: playlist.name),
+                        ),
+                      ).then((_) => service.fetchPlaylists()); // Refresh on back
                     },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'rename',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit_outlined, size: 18, color: Colors.white70),
-                            SizedBox(width: 10),
-                            Text('Ubah Nama', style: TextStyle(color: Colors.white)),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline, size: 18, color: AppTheme.error),
-                            SizedBox(width: 10),
-                            Text('Hapus', style: TextStyle(color: AppTheme.error)),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PlaylistDetailScreen(playlistId: playlist.id, playlistName: playlist.name),
-                      ),
-                    ).then((_) => service.fetchPlaylists()); // Refresh on back
-                  },
                 ),
               );
             },
@@ -443,53 +447,57 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white.withOpacity(0.05)),
             ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  color: Colors.black26,
-                  child: track.coverUrl != null && track.coverUrl!.isNotEmpty
-                      ? Image.network(
-                          track.coverUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppTheme.primary),
-                        )
-                      : const Icon(Icons.music_note, color: AppTheme.primary),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    color: Colors.black26,
+                    child: track.coverUrl != null && track.coverUrl!.isNotEmpty
+                        ? Image.network(
+                            track.coverUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppTheme.primary),
+                          )
+                        : const Icon(Icons.music_note, color: AppTheme.primary),
+                  ),
                 ),
-              ),
-              title: Text(
-                track.title,
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Text(
-                track.artist,
-                style: const TextStyle(color: AppTheme.mutedText, fontSize: 12),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.favorite, color: Colors.red, size: 24),
-                onPressed: () async {
-                  final success = await service.removeFavorite(track.id);
-                  if (mounted && success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('"${track.title}" dihapus dari favorit'),
-                        backgroundColor: AppTheme.surface,
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  }
+                title: Text(
+                  track.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  track.artist,
+                  style: const TextStyle(color: AppTheme.mutedText, fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.favorite, color: Colors.red, size: 24),
+                  onPressed: () async {
+                    final success = await service.removeFavorite(track.id);
+                    if (mounted && success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('"${track.title}" dihapus dari favorit'),
+                          backgroundColor: AppTheme.surface,
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                onTap: () {
+                  playerService.playTrack(track, newQueue: favorites);
                 },
               ),
-              onTap: () {
-                playerService.playTrack(track, newQueue: favorites);
-              },
             ),
           );
         },
@@ -580,39 +588,43 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white.withOpacity(0.05)),
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        color: Colors.black26,
-                        child: track.coverUrl != null && track.coverUrl!.isNotEmpty
-                            ? Image.network(
-                                track.coverUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppTheme.primary),
-                              )
-                            : const Icon(Icons.music_note, color: AppTheme.primary),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          color: Colors.black26,
+                          child: track.coverUrl != null && track.coverUrl!.isNotEmpty
+                              ? Image.network(
+                                  track.coverUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(Icons.music_note, color: AppTheme.primary),
+                                )
+                              : const Icon(Icons.music_note, color: AppTheme.primary),
+                        ),
                       ),
+                      title: Text(
+                        track.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        track.artist,
+                        style: const TextStyle(color: AppTheme.mutedText, fontSize: 12),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: const Icon(Icons.play_arrow_outlined, color: AppTheme.tealAccent, size: 24),
+                      onTap: () {
+                        playerService.playTrack(track, newQueue: history);
+                      },
                     ),
-                    title: Text(
-                      track.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      track.artist,
-                      style: const TextStyle(color: AppTheme.mutedText, fontSize: 12),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: const Icon(Icons.play_arrow_outlined, color: AppTheme.tealAccent, size: 24),
-                    onTap: () {
-                      playerService.playTrack(track, newQueue: history);
-                    },
                   ),
                 );
               },
