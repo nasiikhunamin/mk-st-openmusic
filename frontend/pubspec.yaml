@@ -1,0 +1,29 @@
+name: openmusic_frontend
+description: "A premium music client for OpenMusic API"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.6
+  dio: ^5.4.0
+  flutter_secure_storage: ^9.0.0
+  provider: ^6.1.1
+  just_audio: ^0.9.36
+  audio_video_progress_bar: ^2.0.1
+  google_fonts: ^6.1.0
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
