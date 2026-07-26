@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:openmusic_frontend/services/auth_service.dart';
-import 'package:openmusic_frontend/services/api_client.dart';
 import 'package:openmusic_frontend/theme/app_theme.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -12,32 +11,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _urlController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    final apiClient = Provider.of<ApiClient>(context, listen: false);
-    _urlController.text = apiClient.baseUrl;
-  }
-
-  @override
-  void dispose() {
-    _urlController.dispose();
-    super.dispose();
-  }
-
-  void _updateBaseUrl() {
-    final apiClient = Provider.of<ApiClient>(context, listen: false);
-    apiClient.setBaseUrl(_urlController.text.trim());
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Base URL berhasil diperbarui!'),
-        backgroundColor: AppTheme.tealAccent,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
@@ -46,93 +19,154 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profil & Pengaturan'),
+        title: Text(
+          'Profil Saya',
+          style: textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 22,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // User info card
+            // User Header Profile Card
             if (user != null) ...[
-              Center(
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: AppTheme.primaryContainer,
-                  child: Text(
-                    user.username.substring(0, 1).toUpperCase(),
-                    style: const TextStyle(fontSize: 40, color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  user.username,
-                  style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-              Center(
-                child: Text(
-                  user.email,
-                  style: const TextStyle(color: AppTheme.mutedText),
-                ),
-              ),
-              const SizedBox(height: 32),
-            ],
-
-            // Base URL Configuration
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Konfigurasi Backend API',
-                      style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Ubah Base URL di bawah jika menggunakan emulator Android (10.0.2.2) atau device fisik (IP address lokal).',
-                      style: TextStyle(color: AppTheme.mutedText, fontSize: 12),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _urlController,
-                      decoration: const InputDecoration(
-                        labelText: 'API Base URL',
-                        border: OutlineInputBorder(),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: AppTheme.tealAccent, width: 2),
+                    // Profile Image with Glow
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primary.withOpacity(0.25),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 48,
+                        backgroundColor: AppTheme.primaryContainer,
+                        backgroundImage: const NetworkImage(
+                          'https://lh3.googleusercontent.com/aida-public/AB6AXuCHVRZmtFnWgbZwRi_WxWflbvr6M_9ybtBaXjkBDElV-NpOMH9WFqnIOGoGTXQZ-3fUBYSNhXuNVuAlejDQo-sN4oB0coP2e3GageLuOWKZxGcD-moVSq4rFB7lnIoDxLelAqy73ehgy9S7KgHDEBnjIQTO0sl5II6GetFdwHsSdN7eWNydCSUJB-tkgTlbRyv3Oxk7Rkh4xvewL6fIAyoE9ayzeGujj7NL5QvRegeOVJ3stggRCzc4',
                         ),
+                        child: null,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _updateBaseUrl,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.tealAccent,
-                        foregroundColor: Colors.black,
+                    Text(
+                      user.username,
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
-                      child: const Text('Simpan URL'),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.email,
+                      style: const TextStyle(
+                        color: AppTheme.mutedText,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // Section Info Akun
+            Text(
+              'Informasi Akun',
+              style: textTheme.labelLarge?.copyWith(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+              ),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.person_outline, color: AppTheme.tealAccent),
+                    title: const Text('Username', style: TextStyle(color: AppTheme.mutedText, fontSize: 12)),
+                    subtitle: Text(
+                      user?.username ?? '-',
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Divider(color: Colors.white.withOpacity(0.05), height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.email_outlined, color: AppTheme.tealAccent),
+                    title: const Text('Email', style: TextStyle(color: AppTheme.mutedText, fontSize: 12)),
+                    subtitle: Text(
+                      user?.email ?? '-',
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Section Tentang
+            Text(
+              'Tentang',
+              style: textTheme.labelLarge?.copyWith(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+              ),
+              child: const Column(
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.info_outline, color: AppTheme.tealAccent),
+                    title: Text('Versi Aplikasi', style: TextStyle(color: Colors.white, fontSize: 15)),
+                    trailing: Text('v1.0.0', style: TextStyle(color: AppTheme.mutedText, fontSize: 14)),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 32),
 
             // Logout Button
-            ElevatedButton.icon(
+            OutlinedButton.icon(
               onPressed: () async {
                 await authService.logout();
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.error,
-                foregroundColor: Colors.black,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.error,
+                side: const BorderSide(color: AppTheme.error, width: 1.5),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -141,9 +175,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: const Icon(Icons.logout),
               label: const Text(
                 'Keluar Akun',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
+            const SizedBox(height: 80), // extra padding for bottom navigation / player
           ],
         ),
       ),
