@@ -7,7 +7,8 @@ import 'package:openmusic_frontend/theme/app_theme.dart';
 import 'package:openmusic_frontend/screens/player_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onSearchTap;
+  const HomeScreen({super.key, this.onSearchTap});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -21,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _currentMood = "Chill";
   String _currentCocktail = "Mojito 🍹";
   bool _isLoadingCocktail = false;
+  bool _isSearchingArtist = false;
 
   @override
   void initState() {
@@ -86,16 +88,58 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _playArtistTracks(String artistName) async {
+    final apiClient = Provider.of<ApiClient>(context, listen: false);
+    final playerService = Provider.of<PlayerService>(context, listen: false);
+
+    setState(() => _isSearchingArtist = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Memutar lagu teratas dari $artistName...'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: AppTheme.surface,
+      ),
+    );
+
+    try {
+      final response = await apiClient.dio.get('/api/tracks', queryParameters: {'q': artistName});
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List;
+        final tracks = data.map((item) => Track.fromJson(item)).toList();
+        if (tracks.isNotEmpty) {
+          await playerService.playTrack(tracks.first, newQueue: tracks);
+          _fetchCocktailPairing(tracks.first.id);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Tidak dapat menemukan lagu untuk artis ini'),
+                backgroundColor: AppTheme.error,
+              ),
+            );
+          }
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal menghubungkan ke server'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSearchingArtist = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final playerService = Provider.of<PlayerService>(context);
-
-    // Watch for current track changes to dynamically update mood cocktail pairing
-    if (playerService.currentTrack != null) {
-      // Only update if it's a new track to prevent infinite fetches
-      // We do it safely
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -140,7 +184,35 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              
+              // Top Search Bar (Simulated button to navigate to Explore tab)
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: widget.onSearchTap,
+                child: Container(
+                  height: 54,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.search, color: AppTheme.mutedText),
+                      SizedBox(width: 12),
+                      Text(
+                        'Artis, lagu, atau genre...',
+                        style: TextStyle(color: AppTheme.mutedText, fontSize: 15),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 24),
               
               // Bento Grid Section
               _buildBentoGrid(textTheme, playerService),
@@ -148,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 32),
               
               // Trending Tracks List
-              _buildSectionHeader(textTheme, "Trending Tracks", () {}),
+              _buildSectionHeader(textTheme, "Trending Tracks", widget.onSearchTap ?? () {}),
               const SizedBox(height: 16),
               _isLoadingTrending
                   ? const Center(child: CircularProgressIndicator(color: AppTheme.tealAccent))
@@ -162,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 32),
               
               // Synthwave List
-              _buildSectionHeader(textTheme, "Because you like Synthwave", () {}),
+              _buildSectionHeader(textTheme, "Because you like Synthwave", widget.onSearchTap ?? () {}),
               const SizedBox(height: 16),
               _isLoadingSynthwave
                   ? const Center(child: CircularProgressIndicator(color: AppTheme.tealAccent))
@@ -186,6 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               flex: 2,
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   if (_trendingTracks.isNotEmpty) {
                     playerService.playTrack(_trendingTracks.first, newQueue: _trendingTracks);
@@ -305,6 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 12),
         // Bottom Banner: Cocktail Pairing
         GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () {
             // Open PlayerScreen to show pairing detail if music is playing
             if (playerService.currentTrack != null) {
@@ -365,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: AppTheme.mutedText),
+                const Icon(Icons.chevron_right, color: AppTheme.mutedText),
               ],
             ),
           ),
@@ -382,11 +456,12 @@ class _HomeScreenState extends State<HomeScreen> {
           title,
           style: textTheme.headlineMedium?.copyWith(
             color: Colors.white,
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
         GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Text(
             'Lihat Semua',
@@ -411,6 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 140,
             margin: const EdgeInsets.only(right: 16),
             child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () {
                 playerService.playTrack(track, newQueue: _trendingTracks);
                 _fetchCocktailPairing(track.id);
@@ -563,13 +639,24 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Trending Artists",
-          style: textTheme.headlineMedium?.copyWith(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.between,
+          children: [
+            Text(
+              "Trending Artists",
+              style: textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (_isSearchingArtist)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.tealAccent),
+              ),
+          ],
         ),
         const SizedBox(height: 16),
         SizedBox(
@@ -581,33 +668,37 @@ class _HomeScreenState extends State<HomeScreen> {
               final artist = artists[index];
               return Container(
                 margin: const EdgeInsets.only(right: 24),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.transparent, width: 2),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(36),
-                        child: Image.network(
-                          artist['url']!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            color: AppTheme.surface,
-                            child: const Icon(Icons.person, color: AppTheme.primary),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _isSearchingArtist ? null : () => _playArtistTracks(artist['name']!),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.transparent, width: 2),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(36),
+                          child: Image.network(
+                            artist['url']!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: AppTheme.surface,
+                              child: const Icon(Icons.person, color: AppTheme.primary),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      artist['name']!,
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        artist['name']!,
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
